@@ -8,11 +8,14 @@ import { PermissionStatus } from "@/components/permission-status"
 import { PwaStatus } from "@/components/pwa-status"
 import { Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function Home() {
   const { permission, isLoading, requestPermission, isSupported, isDenied, isGranted } = useNotificationPermission()
   const { isInstalled, isLoading: isPwaLoading } = usePwaStatus()
   const [modalOpen, setModalOpen] = useState(false)
+  const { toast } = useToast()
 
   // Register service worker on mount
   useEffect(() => {
@@ -30,8 +33,20 @@ export default function Home() {
   }, [isLoading, isSupported, permission])
 
   const handleAllowAccess = async () => {
-    await requestPermission()
+    const result = await requestPermission()
     setModalOpen(false)
+
+    // iOS returns "denied" immediately if user previously denied in settings
+    // This means iOS was hiding the true state (showing "default" when actually "denied")
+    if (result === "denied") {
+      toast({
+        title: "Notifications Blocked",
+        description:
+          "Notifications are disabled in your device settings. Go to Settings > Notifications > [App Name] and enable notifications.",
+        variant: "destructive",
+        duration: 10000,
+      })
+    }
   }
 
   const handleNotNow = () => {
@@ -101,6 +116,8 @@ export default function Home() {
       </div>
 
       {canShowModal && <NotificationModal open={modalOpen} onClose={handleNotNow} onAllow={handleAllowAccess} />}
+
+      <Toaster />
     </main>
   )
 }
