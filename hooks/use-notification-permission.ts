@@ -17,15 +17,6 @@ export function useNotificationPermission() {
 
     setPermission(Notification.permission as NotificationPermissionState)
     setIsLoading(false)
-
-    // Listen for permission changes (some browsers support this)
-    const checkPermission = () => {
-      setPermission(Notification.permission as NotificationPermissionState)
-    }
-
-    // Poll for permission changes since not all browsers support the permissionchange event
-    const interval = setInterval(checkPermission, 1000)
-    return () => clearInterval(interval)
   }, [])
 
   const requestPermission = useCallback(async (): Promise<NotificationPermissionState> => {
